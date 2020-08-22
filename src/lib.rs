@@ -1,8 +1,8 @@
 
 pub struct ErrorReport {
-    display : String,
-    line : usize,
-    column : usize,
+    pub display : String,
+    pub line : usize,
+    pub column : usize,
 }
 
 pub fn report( input : &str, start : usize, end : usize ) -> ErrorReport {
