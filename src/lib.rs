@@ -1,5 +1,11 @@
 
-pub fn report( input : &str, start : usize, end : usize ) -> String {
+pub struct ErrorReport {
+    display : String,
+    line : usize,
+    column : usize,
+}
+
+pub fn report( input : &str, start : usize, end : usize ) -> ErrorReport {
     let len = input.len();
     assert!( start < len, "Encountered start index longer than input" );
     assert!( end < len, "Encountered end index longer than input" );
@@ -12,7 +18,9 @@ pub fn report( input : &str, start : usize, end : usize ) -> String {
     let mut current = None;
     let mut after = None; 
     let mut pointer = None;
+    let mut line = 0;
     for l in lines {
+        line += 1;
         if !matches!(current, None) {
             after = Some(l);
             break;
@@ -31,13 +39,15 @@ pub fn report( input : &str, start : usize, end : usize ) -> String {
 
     let p = pointer.expect("pointer was not assiged in error reporter");
 
-    match (before, current, after) {
+    let display = match (before, current, after) {
         (None, Some(c), None) => format!( "{}\n{}\n", c, p ),
         (None, Some(c), Some(a)) => format!( "{}\n{}\n{}\n", c, p, a ),
         (Some(b), Some(c), None) => format!( "{}\n{}\n{}\n", b, c, p ),
         (Some(b), Some(c), Some(a)) => format!( "{}\n{}\n{}\n{}\n", b, c, p, a ),
         _ => panic!("Enountered start and end outside of input range in error reporter: {} {}", start, end),
-    }
+    };
+
+    ErrorReport { display, line, column: dash_len + 1 }
 }
 
 #[cfg(test)]
