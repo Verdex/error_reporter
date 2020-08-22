@@ -19,18 +19,20 @@ pub fn report( input : &str, start : usize, end : usize ) -> ErrorReport {
     let mut after = None; 
     let mut pointer = None;
     let mut line = 0;
+    let mut column = 0;
     for l in lines {
-        line += 1;
         if !matches!(current, None) {
             after = Some(l);
             break;
         }
+        line += 1;
         let dash_len = start - i;
         let arrow_len = 1 + end - start;
         i += l.len() + 1; 
         if i > end {
             current = Some(l); 
             pointer = Some(format!( "{}{}", "-".repeat(dash_len), "^".repeat(arrow_len)));
+            column = dash_len + 1;
         }
         else {
             before = Some(l);
@@ -47,7 +49,7 @@ pub fn report( input : &str, start : usize, end : usize ) -> ErrorReport {
         _ => panic!("Enountered start and end outside of input range in error reporter: {} {}", start, end),
     };
 
-    ErrorReport { display, line, column: dash_len + 1 }
+    ErrorReport { display, line, column }
 }
 
 #[cfg(test)]
@@ -66,7 +68,9 @@ line four
 
         let output = report( input, 21, 21 );
 
-        assert_eq!( output, r#"line one
+        assert_eq!( output.column, 2 );
+        assert_eq!( output.line, 4 );
+        assert_eq!( output.display, r#"line one
 line two
 -^
 line three
@@ -85,7 +89,9 @@ line four
 
         let output = report( input, 21, 24 );
 
-        assert_eq!( output, r#"line one
+        assert_eq!( output.column, 2 );
+        assert_eq!( output.line, 4 );
+        assert_eq!( output.display, r#"line one
 line two
 -^^^^
 line three
@@ -104,7 +110,9 @@ line four
 
         let output = report( input, 20, 20 );
 
-        assert_eq!( output, r#"line one
+        assert_eq!( output.column, 1 );
+        assert_eq!( output.line, 4 );
+        assert_eq!( output.display, r#"line one
 line two
 ^
 line three
@@ -123,7 +131,9 @@ line four
 
         let output = report( input, 27, 27 );
 
-        assert_eq!( output, r#"line one
+        assert_eq!( output.column, 8 );
+        assert_eq!( output.line, 4 );
+        assert_eq!( output.display, r#"line one
 line two
 -------^
 line three
@@ -142,7 +152,9 @@ line four
 
         let output = report( input, 20, 27 );
 
-        assert_eq!( output, r#"line one
+        assert_eq!( output.column, 1 );
+        assert_eq!( output.line, 4 );
+        assert_eq!( output.display, r#"line one
 line two
 ^^^^^^^^
 line three
@@ -160,7 +172,9 @@ line four"#;
 
         let output = report( input, 48, 48 );
 
-        assert_eq!( output, r#"line three
+        assert_eq!( output.column, 9 );
+        assert_eq!( output.line, 6 );
+        assert_eq!( output.display, r#"line three
 line four
 --------^
 "# );
@@ -177,7 +191,9 @@ line four
 
         let output = report( input, 0, 0 );
 
-        assert_eq!( output, r#"line zero
+        assert_eq!( output.column, 1 );
+        assert_eq!( output.line, 1 );
+        assert_eq!( output.display, r#"line zero
 ^
 line one
 "# );
@@ -189,7 +205,9 @@ line one
 
         let output = report( input, 0, 0 );
 
-        assert_eq!( output, r#"line zero
+        assert_eq!( output.column, 1 );
+        assert_eq!( output.line, 1 );
+        assert_eq!( output.display, r#"line zero
 ^
 "# );
     }
@@ -206,11 +224,14 @@ line four
 
         let output = report( input, 23, 25 );
 
-        assert_eq!( output, r#"line one
+        assert_eq!( output.column, 4 );
+        assert_eq!( output.line, 4 );
+        assert_eq!( output.display, r#"line one
 line two
 ---^^^
 line three
 "# );
     }
+
 }
 
